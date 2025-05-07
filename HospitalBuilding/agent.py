@@ -45,7 +45,7 @@ class HospitalBuildingAgent(Agent):
 
         # Расчёт энергопотребления
         heat_kwh = self._heat_hour(dt, T_out)
-        el_kwh = self._electricity_hour(occ, getattr(self.model, 'patients_total', 0))
+        el_kwh = self._electricity_hour(occ, getattr(self.model, 'patients', 0))
         total_kwh = heat_kwh + el_kwh
 
         # Сохраняем результаты
@@ -53,11 +53,10 @@ class HospitalBuildingAgent(Agent):
 
         self._last_occ = occ
 
-        if getattr(self.model, 'verbose', False):
-            print(
-                f"[Hospital {self.unique_id} {dt:%Y-%m-%d %H}] "
-                f"occ={occ:.2f} Δocc={d_occ:.2f} cons={total_kwh:.2f} kWh"
-            )
+        print(
+            f"[Hospital {self.unique_id} {dt:%Y-%m-%d %H}] "
+            f"occ={occ:.2f} Δocc={d_occ:.2f} cons={total_kwh:.2f} kWh"
+        )
 
     def _is_heating_season(self, dt: datetime) -> bool:
         """
@@ -69,7 +68,7 @@ class HospitalBuildingAgent(Agent):
         if month == 10 and day >= 15:
             return True
         # Ноябрь–март
-        if 11 <= month <= 3:
+        if 11 <= month or month <= 3:
             return True
         # Апрель
         if month == 4 and day <= 15:

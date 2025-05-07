@@ -70,9 +70,6 @@ class EnterpriseBuildingAgent(Agent):
         hour_sin = np.sin(2 * np.pi * hour / 24)
         hour_cos = np.cos(2 * np.pi * hour / 24)
 
-        # 3) Погодный признак (пример: внешняя температура)
-        T_out = self.model.current_weather.get('T_out', 0.0)
-
         # 4) Специальные параметры из годового плана
         plan_row = self.plan_df.loc[dt]
         mtl      = plan_row['Motor_and_Transformer_Load_kVarh']

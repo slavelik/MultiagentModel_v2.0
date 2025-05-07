@@ -38,9 +38,9 @@ class EnergyConsumptionModel(Model):
         self.current_weather = {}
         self.current_WeekStatus = 'Weekday'
         self.current_day_off = False
-        self.current_office_population = 10 if 9 < self.current_datetime.hour < 18 else 0 
+        self.current_office_population = 0
         self.hospitalized = 1
-        self.patients_total = 2
+        self.patients = 2
 
         # Количество офисных агентов нужно доступно внутри OfficeBuildingAgent
         self.num_office_agents = n_offices
@@ -75,7 +75,7 @@ class EnergyConsumptionModel(Model):
                 'datetime': lambda m: m.current_datetime,
                 'office_population': lambda m: m.current_office_population,
                 'hospitalized':      lambda m: m.hospitalized,
-                'patients_total':    lambda m: m.patients_total
+                'patients_total':    lambda m: m.patients
             },
             agent_reporters={
                 'AgentType':   lambda a: type(a).__name__,  
