@@ -40,11 +40,11 @@ class MallAgent(Agent):
         self.escalator_idle_power = 1800  # Вт (idle) citeturn2search0
         self.escalator_peak_power = 5000  # Вт (peak) citeturn2search0
         self.cooling_density = 50         # Вт/м² при T_out>24°C ([airfixture.com](https://airfixture.com/resources/blog/ton-per-square-footage-commercial-hvac?utm_source=chatgpt.com))
-        self.ventilation_density = 2      # Вт/м² вентиляция 24/7 ([twinview.com](https://www.twinview.com/insights/benchmarking-commercial-energy-use-per-square-foot?utm_source=chatgpt.com))
+        self.ventilation_density = 4      # Вт/м² вентиляция 24/7 ([twinview.com](https://www.twinview.com/insights/benchmarking-commercial-energy-use-per-square-foot?utm_source=chatgpt.com))
         # Минимальное ночное освещение (экстренное): 1 Вт/м² ([usgbc.org](https://www.usgbc.org/node/2612151?view=language&utm_source=chatgpt.com))
         self.night_lighting_density = 1
         # Плотность тепловой нагрузки: 100 kWh/м²·год ≈ 11.4 Вт/м² в отопительный сезон ([mobile-waerme24.de](https://mobile-waerme24.de/en/news/knowledge/heat-demand-calculation/?utm_source=chatgpt.com))
-        self.heating_density = 11.4
+        self.heating_density = 11,4
 
         # Загружаем модель предсказания occupancy_rate
         clf_path = os.path.join(os.path.dirname(__file__), 'trained_models', 'best_mall_model.pkl')
@@ -92,7 +92,7 @@ class MallAgent(Agent):
         dt = self.model.current_datetime
         T_out = self.model.current_T_out
         # 1) Прогноз occupancy_rate
-        occ = self.predict_occupancy()
+        occ = self.predict_occupancy() / 100
 
         # 2) Освещение
         if self.opening_hour <= dt.hour < self.closing_hour:

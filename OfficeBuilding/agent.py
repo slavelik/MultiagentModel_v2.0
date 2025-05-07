@@ -35,7 +35,7 @@ class OfficeBuildingAgent(Agent):
         heating_load = self.area * self.heating_pump_density if heating_active else 0.0
 
         # 4) Ночная переработка (23:00–7:00) – потребление падает
-        night = (hour >= 23 or hour < 7)
+        night = (hour >= 22 or hour < 7)
         vent_factor = 0.3 if night else 1.0   # 30% мощности вентиляторов ночью
         light_density = self.lighting_night_density if night else self.lighting_day_density
 

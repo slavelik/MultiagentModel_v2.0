@@ -1,103 +1,54 @@
 from mesa import Agent
 from datetime import datetime
 
-
 class HospitalBuildingAgent(Agent):
     """
-    Агент «Больница» для почасового расчёта энергопотребления с фиксированными параметрами.
-
-    Отопительный сезон: с 15 октября по 15 апреля.
-    Итоговое потребление сохраняется в self.consumption (кВт·ч).
+    Простой агент «Больница»:
+    – Два расхода: тепло (равномерно в отопительный сезон) и электроэнергия (динамика по загруженности и операциям).
+    – Итог в self.consumption (Вт·ч) за час.
     """
 
-    # Доли электропотребления (сумма = 1.0)
-    WEIGHTS = {
-        "ventilation": 0.22,
-        "lighting": 0.10,
-        "gdhw": 0.15,
-        "medical_eq": 0.09,
-        "it_transport": 0.02,
-        # Остальная часть (0.42) учитывается в тепловом потреблении
-    }
+    # Параметры здания
+    AREA_M2       = 8000                         # площадь, м²
+    BEDS_TOTAL    = 320                          # койко-мест
+    # Удельная энергия, кВт·ч/м²·год
+    EUI_HEAT_BASE = 108.0  # СП 50: q = 0.024·ГСОП (ГСОП≈4500) → 108 кВт·ч/м²·год 
+    EUI_EL_BASE   = 65.0   # среднее по РФ-аудитам (45–80) → 65 кВт·ч/м²·год 
 
-    # Фиксированные параметры здания
-    AREA_M2 = 8000             # м², площадь больницы (референс)
-    BEDS_TOTAL = 320            # всего коек
-    EUI_EL_BASE = 52.0          # кВт·ч/м²·год, электроэнергия
-    EUI_HEAT_BASE = 54.0       # кВт·ч/м²·год, тепло (≈0.024·4500)
+    # Расчёт часов отопительного сезона: 15 окт–15 апр ≈ 183 дня → 183*24
+    HEAT_HOURS = 183 * 24
+    _HEAT_HOURLY_NORM = EUI_HEAT_BASE * AREA_M2 / HEAT_HOURS  # кВт·ч/ч
 
     def __init__(self, model):
         super().__init__(model)
-        self._last_occ: float = None
-        self.consumption: float = 0.0  # кВт·ч за последний час
+        self.consumption = 0.0  # Вт·ч за последний час
 
-    def step(self) -> None:
-        """
-        Почасовой шаг: рассчитывает и сохраняет суммарное потребление в self.consumption.
-        """
-        dt: datetime = self.model.current_datetime
-        T_out: float = self.model.current_T_out
+    def step(self):
+        dt       = self.model.current_datetime
+        occ      = min(self.model.hospitalized, self.BEDS_TOTAL) / self.BEDS_TOTAL
+        patients = getattr(self.model, 'patients', 0) / max(1, self.BEDS_TOTAL)
 
-        # Загрузка коек
-        hosp = max(0.0, min(self.model.hospitalized, self.BEDS_TOTAL))
-        occ = hosp / self.BEDS_TOTAL if self.BEDS_TOTAL else 0.0
-        d_occ = 0.0 if self._last_occ is None else abs(occ - self._last_occ)
+        # 1) Тепло: только в отопительный сезон, равномерно
+        if  (dt.month == 10 and dt.day >= 15) or (11 <= dt.month <= 12) \
+          or (1 <= dt.month <= 3) or (dt.month == 4 and dt.day <= 15):
+            heat_kWh = self._HEAT_HOURLY_NORM
+        else:
+            heat_kWh = 0.0
 
-        # Расчёт энергопотребления
-        heat_kwh = self._heat_hour(dt, T_out)
-        el_kwh = self._electricity_hour(occ, getattr(self.model, 'patients', 0))
-        total_kwh = heat_kwh + el_kwh
+        # 2) Электричество: базовый часовой уровень
+        base_el = self.EUI_EL_BASE * self.AREA_M2 / 8760.0  # кВт·ч/ч
 
-        # Сохраняем результаты
-        self.consumption = total_kwh * 1000 
+        #    – occupancy влияет на вентиляцию+охлаждение+освещение ≈56 % электропотребления :contentReference[oaicite:2]{index=2}
+        #    – операции/оборудование — около 20 % электропотребления :contentReference[oaicite:3]{index=3}
+        dynamic_factor = 1 + 0.56 * occ + 0.20 * patients
 
-        self._last_occ = occ
+        el_kWh = base_el * dynamic_factor
 
-        print(
-            f"[Hospital {self.unique_id} {dt:%Y-%m-%d %H}] "
-            f"occ={occ:.2f} Δocc={d_occ:.2f} cons={total_kwh:.2f} kWh"
-        )
+        # Сохраняем итог Вт·ч
+        total_kWh       = heat_kWh + el_kWh
+        self.consumption = total_kWh * 1000
 
-    def _is_heating_season(self, dt: datetime) -> bool:
-        """
-        Проверяет, находится ли дата в отопительном сезоне (15.10–15.04).
-        """
-        month = dt.month
-        day = dt.day
-        # Октябрь
-        if month == 10 and day >= 15:
-            return True
-        # Ноябрь–март
-        if 11 <= month or month <= 3:
-            return True
-        # Апрель
-        if month == 4 and day <= 15:
-            return True
-        return False
+        print(f"[Hospital {self.unique_id} {dt:%Y-%m-%d %H}] "
+              f"occ={occ:.2f}  patients={patients:.2f}  "
+              f"heat={heat_kWh:.1f}kWh  el={el_kWh:.1f}kWh")
 
-    def _heat_hour(self, dt: datetime, T_out: float) -> float:
-        """
-        Возвращает часовое тепловое потребление, кВт·ч.
-        """
-        if not self._is_heating_season(dt):
-            return 0.0
-        T_base = 18.0
-        delta = max(0.0, T_base - T_out)
-        # Приводим годовую тепловую энергию к часовому уровню и умножаем на ΔT
-        return (self.EUI_HEAT_BASE * self.AREA_M2 / 8760.0) * delta
-
-    def _electricity_hour(self, occupancy: float, patients_total: int) -> float:
-        """
-        Возвращает часовое электрическое потребление, кВт·ч.
-        """
-        base = self.EUI_EL_BASE * self.AREA_M2 / 8760.0
-        occ_mult = 0.6 + 0.4 * occupancy
-        surg_mult = 1.0 + 0.05 * (patients_total / max(1, self.BEDS_TOTAL))
-
-        q_el = 0.0
-        for component, weight in self.WEIGHTS.items():
-            mult = occ_mult if component in {"ventilation", "lighting"} else 1.0
-            if component == "medical_eq":
-                mult *= surg_mult
-            q_el += weight * mult
-        return q_el * base
