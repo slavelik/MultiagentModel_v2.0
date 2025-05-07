@@ -107,10 +107,10 @@ class EnterpriseBuildingAgent(Agent):
         usage_kwh = self.predict_usage()
         self.consumption = usage_kwh * 1000.0  # перевод в ватт-часы
 
-        print(
-            f"[Enterprise {self.unique_id} | {self.model.current_datetime}]  "
-            f"Weekend={int(self.model.current_WeekStatus != 'Weekday')}  "
-            f"T_out={self.model.current_weather.get('T_out', 'N/A')}°C  "
-            f"Load_Type={self.plan_df.loc[self.model.current_datetime, 'Load_Type']}  "
-            f"Usage={usage_kwh:.3f} kWh ({self.consumption:.1f} Wh)"
-        )
+        # print(
+        #     f"[Enterprise {self.unique_id} | {self.model.current_datetime}]  "
+        #     f"Weekend={int(self.model.current_WeekStatus != 'Weekday')}  "
+        #     f"T_out={self.model.current_weather.get('T_out', 'N/A')}°C  "
+        #     f"Load_Type={self.plan_df.loc[self.model.current_datetime, 'Load_Type']}  "
+        #     f"Usage={usage_kwh:.3f} kWh ({self.consumption:.1f} Wh)"
+        # )

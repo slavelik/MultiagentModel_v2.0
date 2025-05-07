@@ -28,8 +28,7 @@ class OfficeBuildingAgent(Agent):
 
         # 2) Определяем ppl
         ppl = self.model.current_office_population / self.model.num_office_agents
-        if 8 < hour < 19:
-            ppl = 20 
+
         # 3) Отопительный сезон: 15 октября–15 апреля
         m, d = dt.month, dt.day
         heating_active = ((m == 10 and d >= 15) or (m > 10) or (m < 4) or (m == 4 and d <= 15))
@@ -49,9 +48,9 @@ class OfficeBuildingAgent(Agent):
         # 6) Суммарная мгновенная мощность (W)
         self.consumption = heating_load + ventilation_load + lighting_load + plug_load
 
-        print(
-            f"[Office {self.unique_id} | {dt}] "
-            f"Heat={'on' if heating_active else 'off'}({heating_load:.0f}W), "
-            f"Vent={ventilation_load:.0f}W, Light={lighting_load:.0f}W, "
-            f"Plug={plug_load:.0f}W Total={self.consumption:.0f}W"
-        )
+        # print(
+        #     f"[Office {self.unique_id} | {dt}] "
+        #     f"Heat={'on' if heating_active else 'off'}({heating_load:.0f}W), "
+        #     f"Vent={ventilation_load:.0f}W, Light={lighting_load:.0f}W, "
+        #     f"Plug={plug_load:.0f}W Total={self.consumption:.0f}W"
+        # )

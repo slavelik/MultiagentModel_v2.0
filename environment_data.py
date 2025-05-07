@@ -5,8 +5,8 @@ from meteostat import Stations, Hourly
 import os
 
 # 1. Интервал: с 2024-01-01 00:00 до 2024-12-31 23:00
-start = datetime(2024, 1, 1, 0)
-end   = datetime(2024, 12, 31, 23)
+start = datetime(2021, 1, 1, 0)
+end   = datetime(2021, 12, 31, 23)
 
 # 2. Координаты Воронежа
 lat, lon = 51.6755, 39.2103
@@ -32,7 +32,7 @@ df['day_of_week']  = df['datetime'].dt.dayofweek
 df['month']        = df['datetime'].dt.month
 
 # 8. Признак выходного дня (суббота/воскресенье или праздник РФ)
-ru_holidays = holidays.Russia(years=2024)
+ru_holidays = holidays.Russia(years=2021)
 df['day_off'] = df['datetime'].apply(
     lambda x: (x.weekday() >= 5) or (x.date() in ru_holidays)
 )

@@ -48,7 +48,7 @@ class HospitalBuildingAgent(Agent):
         total_kWh       = heat_kWh + el_kWh
         self.consumption = total_kWh * 1000
 
-        print(f"[Hospital {self.unique_id} {dt:%Y-%m-%d %H}] "
-              f"occ={occ:.2f}  patients={patients:.2f}  "
-              f"heat={heat_kWh:.1f}kWh  el={el_kWh:.1f}kWh")
+        # print(f"[Hospital {self.unique_id} {dt:%Y-%m-%d %H}] "
+        #       f"occ={occ:.2f}  patients={patients:.2f}  "
+        #       f"heat={heat_kWh:.1f}kWh  el={el_kWh:.1f}kWh")
 

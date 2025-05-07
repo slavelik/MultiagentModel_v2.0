@@ -135,6 +135,6 @@ class MallAgent(Agent):
         
         self.consumption = (self.electric_consumption + self.heat_consumption) / 1000.0  
 
-        # Логирование
-        print(f"[Mall {self.unique_id} | {dt}] Elec={self.electric_consumption:.0f} W, "
-              f"Heat={self.heat_consumption:.0f} W, Occ={occ:.2f}, Total={self.consumption} W")
+        # # Логирование
+        # print(f"[Mall {self.unique_id} | {dt}] Elec={self.electric_consumption:.0f} W, "
+        #       f"Heat={self.heat_consumption:.0f} W, Occ={occ:.2f}, Total={self.consumption} W")
