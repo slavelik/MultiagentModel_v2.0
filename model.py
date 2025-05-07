@@ -39,8 +39,9 @@ class EnergyConsumptionModel(Model):
         self.current_WeekStatus = 'Weekday'
         self.current_day_off = False
         self.current_office_population = 0
-        self.hospitalized = 1
-        self.patients = 2
+        self.hospitalized = 0
+        self.patients = 0
+        self.presence_in_building = 0
 
         # Количество офисных агентов нужно доступно внутри OfficeBuildingAgent
         self.num_office_agents = n_offices
@@ -73,9 +74,10 @@ class EnergyConsumptionModel(Model):
         self.datacollector = DataCollector(
             model_reporters={
                 'datetime': lambda m: m.current_datetime,
-                'office_population': lambda m: m.current_office_population,
-                'hospitalized':      lambda m: m.hospitalized,
-                'patients_total':    lambda m: m.patients
+                'office_population':    lambda m: m.current_office_population,
+                'hospitalized':         lambda m: m.hospitalized,
+                'patients_total':       lambda m: m.patients,
+                'presence_in_building': lambda m: m.presence_in_building
             },
             agent_reporters={
                 'AgentType':   lambda a: type(a).__name__,  
@@ -113,3 +115,4 @@ class EnergyConsumptionModel(Model):
             agent.step()
         # Переходим к следующему часу
         self.current_datetime += timedelta(hours=1)
+        

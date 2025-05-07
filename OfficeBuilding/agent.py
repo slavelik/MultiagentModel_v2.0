@@ -26,16 +26,17 @@ class OfficeBuildingAgent(Agent):
         dt = self.model.current_datetime
         hour = dt.hour
 
-        # 2) Определяем ppl и occupancy_rate
+        # 2) Определяем ppl
         ppl = self.model.current_office_population / self.model.num_office_agents
-
+        if 8 < hour < 19:
+            ppl = 20 
         # 3) Отопительный сезон: 15 октября–15 апреля
         m, d = dt.month, dt.day
         heating_active = ((m == 10 and d >= 15) or (m > 10) or (m < 4) or (m == 4 and d <= 15))
         heating_load = self.area * self.heating_pump_density if heating_active else 0.0
 
-        # 4) Ночная переработка (23:00–7:00) – потребление падает
-        night = (hour >= 22 or hour < 7)
+        # 4) Ночная переработка (22:00–7:00) – потребление падает
+        night = True if (hour >= 22 or hour < 7) else False
         vent_factor = 0.3 if night else 1.0   # 30% мощности вентиляторов ночью
         light_density = self.lighting_night_density if night else self.lighting_day_density
 

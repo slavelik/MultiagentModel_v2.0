@@ -1,10 +1,11 @@
 import os 
 import time
 import pandas as pd
+from datetime import datetime
+from model import EnergyConsumptionModel
 
 if __name__ == '__main__':
-    from datetime import datetime
-    from model import EnergyConsumptionModel
+
 
     # Параметры симуляции
     START = datetime(2021, 1, 1, 0, 0)
@@ -13,11 +14,11 @@ if __name__ == '__main__':
     # Инициализируем и запускаем модель
     model = EnergyConsumptionModel(
         n_enterprises=1,
-        n_offices=4,
-        n_hospitals=2,
-        n_malls=2,
-        n_modern_residential=20,
-        n_residential=12,
+        n_offices=1,
+        n_hospitals=1,
+        n_malls=1,
+        n_modern_residential=1,
+        n_residential=1,
         start_datetime=START,
         weather_path=os.path.join('data', 'environment_data.csv')
     )

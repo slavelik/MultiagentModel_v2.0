@@ -25,7 +25,7 @@ class MallAgent(Agent):
 
     def __init__(self, model,
                  floor_area: float = 12700,      # м² ТРЦ в Москве citeturn6search0
-                 escalator_count: int = 4,
+                 escalator_count: int = 8,
                  opening_hour: int = 10,
                  closing_hour: int = 22):
         super().__init__(model)
@@ -36,15 +36,17 @@ class MallAgent(Agent):
 
         # Плотности энергопотребления
         self.lighting_density = 18        # Вт/м² при работе (ASHRAE 90.1) citeturn7search9
-        self.equipment_density = 5        # Вт/м² активного оборудования ([twinview.com](https://www.twinview.com/insights/benchmarking-commercial-energy-use-per-square-foot?utm_source=chatgpt.com))
+        self.equipment_density = 15        # Вт/м² активного оборудования ([twinview.com](https://www.twinview.com/insights/benchmarking-commercial-energy-use-per-square-foot?utm_source=chatgpt.com))
         self.escalator_idle_power = 1800  # Вт (idle) citeturn2search0
         self.escalator_peak_power = 5000  # Вт (peak) citeturn2search0
-        self.cooling_density = 50         # Вт/м² при T_out>24°C ([airfixture.com](https://airfixture.com/resources/blog/ton-per-square-footage-commercial-hvac?utm_source=chatgpt.com))
+        self.cooling_density = 60         # Вт/м² при T_out>24°C ([airfixture.com](https://airfixture.com/resources/blog/ton-per-square-footage-commercial-hvac?utm_source=chatgpt.com))
         self.ventilation_density = 4      # Вт/м² вентиляция 24/7 ([twinview.com](https://www.twinview.com/insights/benchmarking-commercial-energy-use-per-square-foot?utm_source=chatgpt.com))
+        self.it_density = 10.8
+        self.other_density = 50
         # Минимальное ночное освещение (экстренное): 1 Вт/м² ([usgbc.org](https://www.usgbc.org/node/2612151?view=language&utm_source=chatgpt.com))
         self.night_lighting_density = 1
         # Плотность тепловой нагрузки: 100 kWh/м²·год ≈ 11.4 Вт/м² в отопительный сезон ([mobile-waerme24.de](https://mobile-waerme24.de/en/news/knowledge/heat-demand-calculation/?utm_source=chatgpt.com))
-        self.heating_density = 11,4
+        self.heating_density = 11.4
 
         # Загружаем модель предсказания occupancy_rate
         clf_path = os.path.join(os.path.dirname(__file__), 'trained_models', 'best_mall_model.pkl')
@@ -91,6 +93,8 @@ class MallAgent(Agent):
     def step(self):
         dt = self.model.current_datetime
         T_out = self.model.current_T_out
+        it_load = self.it_density * self.floor_area
+        other_density = self.other_density * self.floor_area
         # 1) Прогноз occupancy_rate
         occ = self.predict_occupancy() / 100
 
@@ -102,7 +106,7 @@ class MallAgent(Agent):
         lighting_load = light_d * self.floor_area
 
         # 3) Оборудование арендаторов
-        equipment_load = self.equipment_density * self.floor_area * occ
+        equipment_load = self.equipment_density * self.floor_area * (0.2 if occ < 0.2 else occ) 
 
         # 4) Эскалаторы
         if self.opening_hour <= dt.hour < self.closing_hour:
@@ -119,8 +123,8 @@ class MallAgent(Agent):
 
         # Итоговое электричество
         self.electric_consumption = (
-            lighting_load + equipment_load + escalator_load +
-            cooling_load + ventilation_load
+            lighting_load + equipment_load + escalator_load + 
+            cooling_load + ventilation_load + it_load + other_density
         )
 
         # 7) Отопление (тепловая сеть)
